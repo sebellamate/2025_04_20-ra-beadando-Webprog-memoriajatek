@@ -1,0 +1,132 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f8f8;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+    background-color: rgb(0, 128, 0);
+}
+
+header {
+    background-color: #202020;
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: white;
+    margin: 0;
+}
+
+.Kozepre {
+    height: 300px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.form-container {
+    text-align: center;
+}
+
+.adatok-form input {
+    margin: 10px;
+    padding: 10px;
+    font-size: 16px;
+    width: 200px;
+}
+
+.gomb {
+    font-weight: bold;
+    height: 100px;
+    width: 200px;
+    border: none;
+    outline: none;
+    color:rgb(255, 255, 255);
+    background: #111;
+    cursor: pointer;
+    position: relative;
+    z-index: 0;
+    border-radius: 10px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.gomb:before {
+    content: "";
+    background: linear-gradient(
+        45deg,
+        #ff0000,
+        #ff7300,
+        #fffb00,
+        #48ff00,
+        #00ffd5,
+        #002bff,
+        #7a00ff,
+        #ff00c8,
+        #ff0000
+    );
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(5px);
+    -webkit-filter: blur(5px);
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    animation: glowing-button-85 20s linear infinite;
+    transition: opacity 0.3s ease-in-out;
+    border-radius: 10px;
+}
+
+@keyframes glowing-button-85 {
+    0% {
+        background-position: 0 0;
+    }
+    50% {
+        background-position: 400% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+.gomb:after {
+    z-index: -1;
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #222;
+    left: 0;
+    top: 0;
+    border-radius: 10px;
+}
+
+.kartya {
+    width: 50px;
+    height: 70px;
+    margin: 5px;
+    display: inline-block;
+    background-color: #fff;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 70px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.kartya.flipped {
+    background-color: #f0f0f0;
+}
+
+.kartya-ertek {
+    visibility: hidden;
+}
+
+.kartya.flipped .kartya-ertek {
+    visibility: visible;
+}
