@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memóriajáték</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html">Játék</a>
+        <a href="stats.html">Statisztikák</a>
+      </nav>
+      
+  <h1>Memóriajáték</h1>
+  <div class="controls">
+    <div class="input-group">
+      <label for="email">Email cím:</label>
+      <input type="email" id="email" required>
+    </div>
+    <div class="input-group">
+      <label for="age">Életkor:</label>
+      <input type="number" id="age" min="1" required>
+    </div>
+    <div class="input-group">
+      <label for="difficulty">Nehézség:</label>
+      <select id="difficulty">
+        <option value="easy">Könnyű (4 pár)</option>
+        <option value="medium">Közepes (6 pár)</option>
+        <option value="hard">Nehéz (8 pár)</option>
+      </select>
+    </div>
+    <button onclick="startGame()">Játék indítása</button>
+    <button id="revealPairBtn" onclick="revealRandomPair()" disabled>Véletlenszerű pár felfedése</button>
+    <button id="revealAllBtn" onclick="revealAllTemporary()" disabled>Összes kártya megjelenítése</button>
+    <button id="restartBtn" onclick="restartGame()" style="display:none;">Újrakezdés</button>
+  </div>
+  
+  <div id="info"></div>
+  <div class="board" id="board"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
