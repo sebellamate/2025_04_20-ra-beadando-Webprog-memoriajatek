@@ -1,0 +1,870 @@
+ adatok-index.html:
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>Memóriajáték - Kezdés</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    
+  <div class="form-container">
+    <header><h1>Memóriajáték - Kezdés</h1></header>
+    <form id="adatok-form">
+      <label for="nev">Név:</label>
+      <input type="text" id="nev" required />
+      <label for="kor">Életkor:</label>
+      <input type="number" id="kor" required />
+      <label for="email">E-mail cím:</label>
+      <input type="email" id="email" required />
+      <button type="submit" class="gomb">Tovább a szintválasztáshoz</button>
+    </form>
+  </div>
+  <script src="script.js"></script>
+</body>
+===============================
+jatek-index.html:
+</html> <!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>Memóriajáték</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Memóriajáték</h1>
+    <div id="info">
+      <p><strong>Idő:</strong> <span id="ido">0</span> mp</p>
+      <p><strong>Hibák:</strong> <span id="hibak">0</span></p>
+    </div>
+  </header>
+
+  <div id="kartyak-container">
+    <ul id="kartyak-lista"></ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+=========================
+script.js:
+</html>const KepekLista = [
+    "axolt", "capibara", "golya", "kameleon", "lajhar", "lama", "macska", "mokus",
+    "nyuszi", "oroszlan", "panda", "papagaj", "pava", "roka", "suni", "tehen"
+  ];
+  
+  let flippedCards = []; 
+  let matchedCards = 0; //hany db eltalalt kartya
+  let totalCards = 0; //osszes katyak szama
+  let timer = 0; 
+  let interval = null;
+  let hibak = 0;
+  let hasznaltRevealOne = false;
+  let hasznaltRevealAll = false;
+  
+  // adatok bekerese
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('adatok-form')) {
+      document.getElementById('adatok-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const nev = document.getElementById('nev').value;
+        const kor = document.getElementById('kor').value;
+        const email = document.getElementById('email').value;
+  
+        if (nev && kor && email) {
+          localStorage.setItem('nev', nev);
+          localStorage.setItem('kor', kor);
+          localStorage.setItem('email', email);
+          window.location.href = "szint-index.html";
+        }
+      });
+    }
+  
+    if (document.getElementById('kartyak-lista')) {
+      const level = localStorage.getItem('level');
+      let cardCount = 8;
+  
+      if (level === 'medium') cardCount = 12;
+      if (level === 'hard') cardCount = 16;
+  
+      totalCards = cardCount * 2;
+  
+      startTimer();
+      generateCards(cardCount);
+      
+    }
+  });
+  
+  function startGame(level) {
+    localStorage.setItem('level', level);
+    window.location.href = "jatek-index.html";
+  }
+  
+  // Kartyak generalasa
+  function generateCards(count) {
+    const images = shuffle([...KepekLista.slice(0, count), ...KepekLista.slice(0, count)]);
+    const ul = document.getElementById('kartyak-lista');
+    ul.innerHTML = '';
+  
+    images.forEach((img) => {
+      const li = document.createElement('li');
+      li.classList.add('kartya');
+      li.innerHTML = `
+        <div class="kartya-elso"><img src="kepek/${img}.jpg" class="kartya-ertek" /></div>
+        <div class="kartya-hatul">?</div>
+      `;
+      ul.appendChild(li);
+    });
+  
+    // Felfedéskor
+    document.querySelectorAll('.kartya').forEach(card => card.classList.add('flipped'));
+    setTimeout(() => {
+      document.querySelectorAll('.kartya').forEach(card => card.classList.remove('flipped'));
+    }, 4000);
+  
+    
+    ul.addEventListener('click', function (e) {
+      const card = e.target.closest('.kartya');
+      if (!card || card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length >= 2) return;
+  
+      card.classList.add('flipped');
+      flippedCards.push(card);
+  
+      if (flippedCards.length === 2) {
+        setTimeout(checkMatch, 1000);
+      }
+    });
+  }
+  
+  function checkMatch() {
+    const [card1, card2] = flippedCards;
+    const img1 = card1.querySelector('img').src;
+    const img2 = card2.querySelector('img').src;
+  
+    if (img1 === img2) {
+      card1.classList.add('matched');
+      card2.classList.add('matched');
+      matchedCards += 2;
+    } else {
+      card1.classList.remove('flipped');
+      card2.classList.remove('flipped');
+      hibak++;
+      document.getElementById('hibak').textContent = hibak;
+    }
+  
+    flippedCards = [];
+  
+    if (matchedCards === totalCards) {
+      clearInterval(interval);
+      saveStats();
+      setTimeout(() => console.log('Gratulálok! Teljesítetted a játékot!'), 300);
+    }
+  }
+  
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  
+  function startTimer() {
+    interval = setInterval(() => {
+      timer++;
+      document.getElementById('ido').textContent = timer;
+    }, 1000);
+  }
+  
+  // -------- STATISZTIKÁK --------
+  function saveStats() {
+    const stat = {
+      email: localStorage.getItem('email'),
+      kor: localStorage.getItem('kor'),
+      szint: localStorage.getItem('level'),
+      ido: timer,
+      hibak,
+      datum: new Date().toLocaleDateString()
+    };
+  
+    const statok = JSON.parse(localStorage.getItem('statisztikak')) || [];
+    statok.push(stat);
+    localStorage.setItem('statisztikak', JSON.stringify(statok));
+  }
+====================
+style.js:
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: rgb(0, 128, 0);
+    color: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+header {
+    background-color: #202020;
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: white;
+    margin: 0;
+}
+
+.Kozepre {
+    height: 300px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.form-container {
+    text-align: center;
+}
+
+.adatok-form input {
+    margin: 10px;
+    padding: 10px;
+    font-size: 16px;
+    width: 200px;
+}
+
+.gomb {
+    font-weight: bold;
+    height: 100px;
+    width: 200px;
+    border: none;
+    outline: none;
+    color: rgb(255, 255, 255);
+    background: #111;
+    cursor: pointer;
+    position: relative;
+    z-index: 0;
+    border-radius: 10px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.gomb:before {
+    content: "";
+    background: linear-gradient(
+        45deg,
+        #ff0000,
+        #ff7300,
+        #fffb00,
+        #48ff00,
+        #00ffd5,
+        #002bff,
+        #7a00ff,
+        #ff00c8,
+        #ff0000
+    );
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(5px);
+    -webkit-filter: blur(5px);
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    animation: glowing-button-85 20s linear infinite;
+    transition: opacity 0.3s ease-in-out;
+    border-radius: 10px;
+}
+
+@keyframes glowing-button-85 {
+    0% {
+        background-position: 0 0;
+    }
+    50% {
+        background-position: 400% 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+.gomb:after {
+    z-index: -1;
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #222;
+    left: 0;
+    top: 0;
+    border-radius: 10px;
+}
+
+.kartya {
+    width: 100px;
+    height: 100px;
+    margin: 5px;
+    display: inline-block;
+    background-color: #fff;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 100px;
+    font-size: 20px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.3s;
+    min-width: 100px; /* Minimum szélesség */
+    min-height: 100px; /* Minimum magasság */
+}
+
+
+.kartya.flipped {
+    background-color: #f0f0f0;
+}
+
+.kartya-ertek {
+    visibility: hidden;
+}
+
+.kartya.flipped .kartya-ertek {
+    visibility: visible;
+}
+
+.kartya-elso {
+    position: absolute;
+    backface-visibility: hidden;
+}
+
+.kartya-masodik {
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+}
+
+/* Kártyák konténere - rugalmas elrendezés */
+#kartyak-lista {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+    gap: 10px;
+    list-style: none;
+}
+
+/* Kártya alapstílus */
+.kartya {
+    width: 80px;
+    height: 80px;
+    perspective: 1000px;
+    position: relative;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
+}
+
+/* Felfordított kártya */
+.kartya.flipped .kartya-elso {
+    transform: rotateY(0deg);
+}
+
+.kartya.flipped .kartya-hatul {
+    transform: rotateY(180deg);
+}
+
+/* Kártya elő- és hátlap */
+.kartya-elso,
+.kartya-hatul {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    backface-visibility: hidden;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Előlap (kép) */
+.kartya-elso {
+    transform: rotateY(180deg);
+}
+
+.kartya-elso img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Hátlap */
+.kartya-hatul {
+    background-color: #333;
+    color: white;
+    font-size: 2rem;
+}
+
+/* Párosított kártya */
+.kartya.matched {
+    visibility: hidden;
+}
+
+/* Reszponzív viselkedés */
+@media (max-width: 768px) {
+    .kartya {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .kartya {
+        width: 50px;
+        height: 50px;
+    }
+}
+==========================
+szint-index.html:
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>Memóriajáték - Szintválasztás</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- szint-index.html-->
+  <header><h1>Memóriajáték - Szintválasztás</h1></header>
+  <div class="form-container">
+    <button class="gomb" onclick="startGame('easy')">Könnyű</button>
+    <button class="gomb" onclick="startGame('medium')">Közepes</button>
+    <button class="gomb" onclick="startGame('hard')">Nehéz</button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+=============================7
+memory/create/index.php: 
+<?php
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
+    header("Access-Control-Allow-Methods: GET");
+    header("Content-Type: application/json; charset=UTF-8");
+
+    function check_request() {
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            http_response_code(200);
+            exit();
+        } else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            http_response_code(400);
+            echo json_encode(["error" => "Nem fogadok GET kérést!"], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+    }
+
+    function get_game() {
+        $post = file_get_contents("php://input");
+        $post = json_decode($post);
+        return [
+            "email" => $post->email ?? "",
+            "age" => $post->age ?? "",
+            "level" => $post->level ?? "",
+            "time" => $post->time ?? "",
+            "mistakes" => $post->mistakes ?? "",
+            "date" => date('Y-m-d')
+        ];
+    }
+
+    function check_data($data) {
+        foreach (['email', 'age', 'level', 'time', 'mistakes'] as $key) {
+            if (!$data[$key]) {
+                http_response_code(400);
+                echo json_encode(["error" => "Hiányzó adat(ok)!"], JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+        }
+    }
+
+    function connect_db() {
+        $servername = "localhost";
+        $username = "root";
+        $password = "";
+        $database = "memory_game";
+        $mysql = new mysqli($servername, $username, $password, $database);
+        return $mysql;
+    }
+
+    function get_last_game($mysql, $email, $level) {
+        $query = $mysql->prepare("SELECT * FROM statistics WHERE email = ? AND chosen_level = ?");
+        $query->bind_param("ss", $email, $level);
+        $query->execute();
+        $result = $query->get_result();
+        $query->close();
+        return $result;
+    }
+
+    function del_last_game($mysql, $email, $level) {
+        $query = $mysql->prepare("DELETE FROM statistics WHERE email = ? AND chosen_level = ?");
+        $query->bind_param("ss", $email, $level);
+        $query->execute();
+        $query->close();
+    }
+
+    function create_new_game($mysql, $d) {
+        $query = $mysql->prepare("INSERT INTO statistics (email, age, chosen_level, playtime, mistakes, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+        $query->bind_param("sissds", $d["email"], $d["age"], $d["level"], $d["time"], $d["mistakes"], $d["date"]);
+        $query->execute();
+        $query->close();
+    }
+
+    function send_response_success($data) {
+        http_response_code(201);
+        echo json_encode([
+            "email" => $data["email"],
+            "age" => $data["age"],
+            "level" => $data["level"],
+            "time" => $data["time"],
+            "mistakes" => $data["mistakes"],
+            "date" => $data["date"]
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    function update_player_stats($mysql, $data) {
+        del_last_game($mysql, $data["email"], $data["level"]);
+        create_new_game($mysql, $data);
+        send_response_success($data);
+    }
+
+    function send_response_ok($row) {
+        http_response_code(200);
+        echo json_encode([
+            "message" => "Korábbi eredmény már jobb volt!",
+            "result" => $row
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    function save_game($mysql, $data) {
+        $result = get_last_game($mysql, $data["email"], $data["level"]);
+        if ($row = $result->fetch_assoc()) {
+            if ($data["time"] <= floatval($row["playtime"])) {
+                update_player_stats($mysql, $data);
+            } else {
+                send_response_ok($row);
+            }
+        } else {
+            create_new_game($mysql, $data);
+            send_response_success($data);
+        }
+    }
+
+    check_request();
+    $data = get_game();
+    check_data($data);
+    $mysql = connect_db();
+    save_game($mysql, $data);
+    $mysql->close();
+?> 
+=======================
+memory/data.sql: 
+DROP DATABASE IF EXISTS memory_game;
+
+CREATE DATABASE memory_game;
+USE memory_game;
+
+CREATE TABLE statistics (
+    email VARCHAR(255),
+    age INT NOT NULL,
+    chosen_level VARCHAR(255) NOT NULL,
+    playtime INT NOT NULL, -- másodpercben
+    mistakes INT,
+    created_at DATE NOT NULL,
+    CONSTRAINT PK_Statistics PRIMARY KEY (email, chosen_level)
+);
+
+INSERT INTO statistics
+VALUES
+("farkas.norbert@ckik.hu", 28, "könnyű", 52, 19, "2025-4-13"),
+("nagy.lajos@gmail.com", 31, "normál", 126, 11, "2025-4-10"),
+("vago.orsolya@gmail.com", 19, "nehéz", 238, 24, "2025-4-12"),
+("kiss.anna@hotmail.com", 25, "könnyű", 45, 12, '2025-04-01'),
+("szabo.marton@yahoo.com", 34, "normál", 110, 8, '2025-04-02'),
+("toth.gergo@gmail.com", 22, "nehéz", 275, 15, '2025-03-30'),
+("kerekes.julia@freemail.hu", 30, "könnyű", 60, 14, '2025-04-03'),
+("balogh.tamas@gmail.com", 27, "normál", 140, 17, '2025-04-05'),
+("hajdu.emese@gmail.com", 20, "nehéz", 310, 22, '2025-03-28'),
+("szilagyi.rudolf@outlook.com", 45, "könnyű", 55, 10, '2025-03-29'),
+("illes.adrienn@yahoo.com", 18, "normál", 125, 9, '2025-04-06'),
+("varga.david@gmail.com", 33, "nehéz", 290, 18, '2025-04-04'),
+("molnar.lilla@freemail.hu", 24, "könnyű", 50, 13, '2025-04-07'),
+("szanto.peter@gmail.com", 29, "normál", 135, 16, '2025-04-01'),
+("liptak.eva@t-email.hu", 26, "nehéz", 260, 20, '2025-04-02'),
+("fekete.nikolett@gmail.com", 21, "könnyű", 48, 11, '2025-03-31'),
+("orosz.bence@citromail.hu", 38, "normál", 120, 10, '2025-04-06'),
+("kiss.maria@gmail.com", 40, "nehéz", 305, 26, '2025-04-05'),
+("feher.csaba@freemail.hu", 23, "könnyű", 43, 9, '2025-04-03'),
+("nagy.zsuzsa@gmail.com", 36, "normál", 145, 14, '2025-04-04'),
+("kovacs.laszlo@yahoo.com", 31, "nehéz", 280, 21, '2025-03-29'),
+("takacs.krisztina@gmail.com", 19, "könnyű", 39, 7, '2025-04-02'),
+("veres.zoltan@t-online.hu", 28, "normál", 130, 12, '2025-04-01');
+memory/index.php:  <?php
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
+    header("Access-Control-Allow-Methods: GET");
+    header("Content-Type: application/json; charset=UTF-8");
+
+    function get_level() {
+        $level = $_GET["level"] ?? "";
+        if ($level === "") {
+            http_response_code(400);
+            echo json_encode(["error" => "Hiányzik a szint!"], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        return $level;
+    }
+
+    function connect_db() {
+        $servername = "localhost";
+        $username = "root";
+        $password = "";
+        $database = "memory_game";
+        $mysql = new mysqli($servername, $username, $password, $database);
+        return $mysql;
+    }
+
+    function get_data($mysql, $level) {
+        $query = $mysql->prepare("SELECT * FROM statistics WHERE chosen_level = ?");
+        $query->bind_param("s", $level);
+        $query->execute();
+        $data = $query->get_result();
+        $query->close();
+        $mysql->close();
+        return $data;
+    }
+
+    function get_result($data) {
+        $result = [];
+        while ($row = $data->fetch_assoc()) {
+            $result[] = $row;
+        }
+        return $result;
+    }
+
+    function send_response($result) {
+        if (count($result) > 0) {
+            http_response_code(200);
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        } else {
+            http_response_code(404);
+            echo json_encode(["error" => "Nincs ilyen szint!"]);
+        }
+    }
+
+    $level = get_level();
+    $mysql = connect_db();
+    $data = get_data($mysql, $level);
+    $result = get_result($data);
+    send_response($result);
+?> 
+=================================
+a feladat pedig a következő: # Memory-Game 🧠
+
+Készítsetek egy egyszerű memória játékot az alábbi leírás alapján!
+
+A játék lényege, hogy képeket tartalmazó kártyákat kell párba rendezni a játékosnak. A kártyák kezdetben le vannak fordítva, és a játékos egyszerre csak két kártyát nézhet meg.
+
+## Funkcionalitás (frontend - JS) 🎮
+
+1. A játék elején jelenjenek meg képeket tartalmazó kártyák, melyek tartalma rövid ideig (3-5 másodpercig) látható. A kártyák sorrendje legyen véletlenszerű, és mindegyik kártyának pontosan egy párja legyen. - **3p**
+
+2. Ha a játékos rákattint egy kártyára, az forduljon fel, és mutassa a hozzá tartozó képet. - **1p**
+
+3. Ha kiválasztott a játékos egy kártyát, tudjon hozzá párt is választani! Fedjük fel a második kiválasztott kártyát is, és ellenőrizzük, hogy talált-e párt a játékos. Ha egyeznek a képek, tüntessük el a kártyákat. Más esetben csak fordítsuk vissza őket. - **3p**
+
+4. Figyeljük a játék során az időt, és számoljuk a hibákat is. (Hibának tekintjük ha rossz párt választ a játékos.) - **2p**
+
+5. A játékos tudjon kezdetben szintet választani. Nehezebb szinteken legyen több kártya. Legalább 3 fajta nehézségi szint legyen. - **2p**
+
+6. Kapjon a játékos egy egyszer használható képességet is. Aktiválásakor egy véletlenszerűen választott kártyapár felfedésre kerül. - **2p**
+
+7. Szintén egyszer használható képessége a játékosnak, hogy rövid időre (3-5 másodperc) felfedjük a teljes játékteret. - **2p**
+
+8. A kártyák kattintását delegálással oldd meg: ne írj mindegyik kártyához külön eseménykezelőt, hanem a szülő elem kezelje a kattintást! - **1p**
+
+9. A játék legyen végigjátszható, ne tartalmazzon hibákat vagy elakadási lehetőséget. - **2p**
+
+10. Törekedj a kód tisztaságára! - **2p**
+    - beszédes változónevek
+    - hosszabb és ismétlődő kódrészek kiszervezése függvényekbe
+
+Összesen: **20 pont**
+
+## Adattárolás és kinézet (AJAX, CSS) 🧾
+
+1. A felhasználó még a játék kezdete előtt adja meg az email címét és az életkorát. A játék végét követően tárold el `localstorage`-ban a játék statisztikáit! - **2 pont**
+    - Ki játszott? (azonosító: email cím)
+    - Mennyi a játékos életkora?
+    - Milyen szintű volt a játék? (könnyű, normál, nehéz)
+    - Mennyi idő alatt fejtette meg?
+    - Hányszor hibázott?
+    - Melyik napon játszott? (aktuális dátum)
+
+2. Tartozzon a webalkalmazáshoz egy második weboldal is, amelyen statisztikákat láthatunk a korábbi játékokból (`localstorage`-ból lekérve). Az adatokat táblázatos formában jelenítsd meg! Legyen lehetőség email cím alapján szűrni is! A két weboldal között menüvel tudjunk közlekedni! - **3 pont**
+
+3. Szintén a játék végét követően küldd el az alkalmazáshoz tartozó szervernek az aktuális játék adatait `POST` kéréssel. - **3 pont**
+
+4. A statisztikák oldalon legyen egy szint választó menü. Egy szint kiválasztásakor `GET` kéréssel kérd le a szervertől az adott szinthez tartozó toplistát. Az adatokat idő szerint növekvő, azon belül hiba szerint növekvő sorrendben jelenítsd meg! - **4 pont**
+
+5. A weboldalak mindegyike legyen szép kinézetű, reszponzív! - **8 pont**
+    - A játék oldalán keskeny kijelző esetén a kártyák több sorba törve, reszponzívan jelenjenek meg!
+    - Használj legalább 3 különböző animációt, áttűnést az oldalakon! (Pl.: kártyák felfordítása, képességek használata, navigációs menü, idő kijelző, ...)
+    - Alkalmazz árnyék effektust, lekerekített sarkokat, színátmenetet!
+    - Az oldalak kinézete általánosságban véve igényes!
+
+Összesen: **20 pont** # Memory-Game szerver 🖥
+
+## Adatok kérése
+
+A `http://localhost/memory/` végpontnak `GET` kérést küldve a következő válaszokat kaphatjuk.
+
+**1. Hiányzó paraméter:** `http://localhost/memory/`
+
+``` json
+{
+  "error": "Hiányzik a szint!"
+}
+```
+
+Válaszban kapott státuszkód: `400`.
+
+**2. Nem létező szint:** `http://localhost/memory/?level=alma`
+
+```json
+{
+  "error": "Nincs ilyen szint!"
+}
+```
+
+Válaszban kapott státuszkód: `404`.
+
+**3. Sikeres kérés:** `http://localhost/memory/?level=nehéz`
+
+```json
+[
+  {
+    "email": "hajdu.emese@gmail.com",
+    "age": 20,
+    "chosen_level": "nehéz",
+    "playtime": 310,
+    "mistakes": 22,
+    "created_at": "2025-03-28"
+  },
+  {
+    "email": "kiss.maria@gmail.com",
+    "age": 40,
+    "chosen_level": "nehéz",
+    "playtime": 305,
+    "mistakes": 26,
+    "created_at": "2025-04-05"
+  },
+  {
+    "email": "kovacs.laszlo@yahoo.com",
+    "age": 31,
+    "chosen_level": "nehéz",
+    "playtime": 280,
+    "mistakes": 21,
+    "created_at": "2025-03-29"
+  },
+  ...
+]
+```
+
+Válaszban kapott státuszkód: `200`. A sikeres kéréshez a szint *könnyű*, *normál* vagy *nehéz* lehet.
+
+---
+
+## Adatok küldése
+
+A `http://localhost/memory/create/` végpont `POST` kérést fogad. A kérés törzse a következő adattagokkal kell rendelkezzen:
+
+```json
+{
+  "email": "farkas.norbert@ckik.hu",
+  "age": 28,
+  "level": "nehéz",
+  "time": 241,
+  "mistakes": 37
+}
+```
+
+**1. Hiányzó adat:**
+
+```json
+{
+  "email": "farkas.norbert@ckik.hu",
+  "age": 28
+}
+```
+
+Válaszban kapott státuszkód: `400`. A válasz törzse:
+
+```json
+{
+  "error": "Hiányzó adat(ok)!"
+}
+```
+
+**2. Korábbinál rosszabb eredmény:**
+
+```json
+{
+  "email": "farkas.norbert@ckik.hu",
+  "age": 28,
+  "level": "könnyű",
+  "time": 73,
+  "mistakes": 23
+}
+```
+
+Válaszban kapott státuszkód: `200`. A válasz törzse:
+
+```json
+{
+  "message": "Korábbi eredmény már jobb volt!",
+  "result": {
+    "email": "farkas.norbert@ckik.hu",
+    "age": 28,
+    "chosen_level": "könnyű",
+    "playtime": 52,
+    "mistakes": 19,
+    "created_at": "2025-04-13"
+  }
+}
+```
+
+**3. Új eredmény (vagy korábbinál nem rosszabb):**
+
+```json
+{
+  "email": "farkas.norbert@ckik.hu",
+  "age": 28,
+  "level": "könnyű",
+  "time": 52,
+  "mistakes": 23
+}
+```
+
+Válaszban kapott státuszkód: `201`. A válasz törzse:
+
+```json
+{
+  "email": "farkas.norbert@ckik.hu",
+  "age": 28,
+  "level": "könnyű",
+  "time": 52,
+  "mistakes": 23,
+  "date": "2025-04-14"
+}
+```
+
+Dátumként a szerver automatikusan az aktuális napot tárolja el.

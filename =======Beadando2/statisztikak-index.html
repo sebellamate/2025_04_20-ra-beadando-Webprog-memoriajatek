@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memóriajáték - Statisztikák</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav>
+    <a href="adatok-index.html" id="menu-kezdolap">Kezdőlap</a>
+    <a href="statisztikak-index.html" id="menu-statisztikak">Statisztikák</a>
+  </nav>
+
+  <header>
+    <h1>Memóriajáték - Statisztikák</h1>
+  </header>
+
+  <div class="form-container">
+    <input type="email" id="email-kereses" placeholder="Email alapján keresés" />
+    <button id="kereses-gomb">Keresés</button>
+    <button id="reset-gomb">Összes statisztika</button>
+  </div>
+
+  <div id="statisztikak-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Kor</th>
+          <th>Szint</th>
+          <th>Idő (mp)</th>
+          <th>Hibák</th>
+          <th>Dátum</th>
+        </tr>
+      </thead>
+      <tbody id="statisztikak-tabla"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <button onclick="window.location.href='adatok-index.html'">Vissza a kezdőlapra</button>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
